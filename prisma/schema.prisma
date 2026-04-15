@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  blingClientId   String
+  blingClientSecret String
+  blingAccessToken  String?
+  blingRefreshToken String?
+  blingTokenExpiry  DateTime?
+  blingAccountId   String?
+  webhookToken     String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  orders           Order[]
+}
+
+model Order {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  accountId       String    @db.ObjectId
+  account         Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  
+  numero          String
+  blingId         String
+  status          String
+  loja            String
+  transportadora  String
+  valor           Float
+  cliente         Json?
+  
+  dataCriacao     DateTime
+  dataFaturamento DateTime?
+  dataVerificacao DateTime?
+  dataConclusao   DateTime?
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@unique([blingId, accountId])
+  @@index([status])
+  @@index([numero])
+  @@index([dataCriacao])
+}
+
+model Store {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  accountId String   @db.ObjectId
+  name      String
+  blingId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([blingId, accountId])
+}
