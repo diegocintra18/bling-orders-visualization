@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
 
 function BlingCallbackContent() {
   const router = useRouter();
@@ -12,26 +11,18 @@ function BlingCallbackContent() {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
     const state = params.get('state');
+    const errorParam = params.get('error');
 
-    if (!code) {
-      setError('Código de autorização não encontrado');
+    if (errorParam) {
+      setError(`Erro: ${errorParam}`);
       return;
     }
 
-    const exchangeCode = async () => {
-      try {
-        await fetch(api.getBlingCallbackUrl(), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, state }),
-        });
-        router.push('/accounts');
-      } catch (err) {
-        setError('Erro ao conectar com Bling');
-      }
-    };
-
-    exchangeCode();
+    if (code && state) {
+      router.push(`/accounts?success=oauth_complete&code=${code}&state=${state}`);
+    } else {
+      router.push('/accounts');
+    }
   }, [router]);
 
   if (error) {
@@ -54,7 +45,7 @@ function BlingCallbackContent() {
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-slate-600">Conectando com Bling...</p>
+        <p className="text-slate-600">Processando callback...</p>
       </div>
     </div>
   );

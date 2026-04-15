@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: '',
         email: '',
         name: '',
-        isAdmin: true,
+        role: 'user',
       });
     }
     setIsLoading(false);

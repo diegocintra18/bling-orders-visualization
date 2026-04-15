@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
 
 function BlingAuthContent() {
   const router = useRouter();
@@ -18,10 +17,9 @@ function BlingAuthContent() {
     }
 
     if (code) {
-      window.location.href = `/callback/bling?code=${code}`;
+      window.location.href = `/accounts?success=oauth_complete`;
     } else {
-      const authUrl = api.getBlingAuthUrl();
-      window.location.href = authUrl;
+      router.push('/accounts');
     }
   }, [router]);
 
@@ -29,7 +27,7 @@ function BlingAuthContent() {
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-slate-600">Redirecionando para Bling...</p>
+        <p className="text-slate-600">Processando autorização...</p>
       </div>
     </div>
   );

@@ -143,7 +143,7 @@ class ApiClient {
     return data;
   }
 
-  async logout(): void {
+  async logout(): Promise<void> {
     this.clearTokens();
   }
 
