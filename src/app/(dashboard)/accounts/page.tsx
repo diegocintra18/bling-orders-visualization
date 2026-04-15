@@ -5,7 +5,7 @@ import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Plus, Edit2, Trash2, RefreshCw, Link2, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Edit2, Trash2, RefreshCw, CheckCircle, XCircle, ExternalLink } from 'lucide-react';
 import type { BlingAccount } from '@/types';
 
 export default function AccountsPage() {
@@ -251,7 +251,7 @@ export default function AccountsPage() {
                             onClick={() => handleOpenModal(account)}
                             title="Autorizar conta"
                           >
-                            <Link2 className="w-4 h-4 text-blue-500" />
+                            <ExternalLink className="w-4 h-4 text-blue-500" />
                           </Button>
                         )}
                         <Button
