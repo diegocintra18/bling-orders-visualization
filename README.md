@@ -88,6 +88,7 @@ Configure no painel do Bling a URL do webhook:
 https://seu-dominio.com/api/webhooks/bling/{account_id}
 ```
 
+
 ## 🔐 Segurança
 
 - Tokens JWT com expiração (15min access, 7d refresh)
