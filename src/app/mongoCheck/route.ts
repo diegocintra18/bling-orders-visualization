@@ -4,17 +4,16 @@ import prisma from '@/lib/prisma';
 export async function GET() {
   try {
     await prisma.$connect();
-    
-    const databases = await prisma.$runCommandRaw({
-      listDatabases: 1
-    });
+
+    const userCount = await prisma.user.count();
 
     await prisma.$disconnect();
 
     return NextResponse.json({
       success: true,
       message: 'Conexão com MongoDB estabelecida com sucesso',
-      databases: (databases as any).databases?.map((d: any) => d.name) || []
+      userCount,
+      database: 'bling-orders'
     });
   } catch (error: any) {
     return NextResponse.json({
@@ -24,7 +23,7 @@ export async function GET() {
       code: error.code,
       env: {
         hasDatabaseUrl: !!process.env.DATABASE_URL,
-        databaseUrlPrefix: process.env.DATABASE_URL?.substring(0, 20) || 'não definido'
+        databaseUrlPrefix: process.env.DATABASE_URL?.substring(0, 30) || 'não definido'
       }
     }, { status: 500 });
   }
