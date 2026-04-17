@@ -97,7 +97,6 @@ export default function AccountsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          clientId: formData.clientId,
           accountId: editingAccount?.id,
           callbackUrl: formData.redirectUri
         })
