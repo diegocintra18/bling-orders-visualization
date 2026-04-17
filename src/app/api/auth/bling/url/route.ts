@@ -20,18 +20,21 @@ export async function POST(request: NextRequest) {
     const account = await prisma.account.findUnique({ where: { id: accountId } });
 
     if (!account || !account.blingClientId || !account.blingClientSecret) {
-      return NextResponse.json({ error: 'Conta não encontrada ou sem credenciais' }, { status: 400 });
+      return NextResponse.json({ error: 'Conta não encontrada ou sem credenciais salvas. Save credentials first.' }, { status: 400 });
     }
 
     const clientId = decrypt(account.blingClientId);
-    const baseUrl = new URL(request.url).origin;
-    const redirectUri = `${baseUrl}/api/auth/bling/callback?accountId=${accountId}`;
+    const baseUrl = new URL(request.headers.get('origin') || 'http://localhost:3000').origin;
+    const redirectUri = `${baseUrl}/api/auth/bling/callback`;
 
-    const oauthUrl = getBlingOAuthUrl(clientId, redirectUri, 'bling-oauth');
+    console.log('Generating OAuth URL:', { clientId: clientId.substring(0, 10), redirectUri });
+
+    const state = btoa(JSON.stringify({ accountId }));
+    const oauthUrl = getBlingOAuthUrl(clientId, redirectUri, state);
 
     return NextResponse.json({ url: oauthUrl });
   } catch (error) {
     console.error('OAuth URL error:', error);
-    return NextResponse.json({ error: 'Erro ao gerar URL de autorização' }, { status: 500 });
+    return NextResponse.json({ error: 'Erro ao gerar URL de autorização: ' + (error as Error).message }, { status: 500 });
   }
 }

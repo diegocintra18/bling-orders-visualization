@@ -7,30 +7,39 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');
-    const accountId = searchParams.get('accountId');
+    const state = searchParams.get('state');
     const error = searchParams.get('error');
 
-    console.log('OAuth callback received:', { hasCode: !!code, accountId, error });
+    console.log('OAuth callback:', { hasCode: !!code, hasState: !!state, error });
 
     if (error) {
       return NextResponse.redirect(new URL(`/accounts?error=${error}`, request.url));
     }
 
-    if (!code || !accountId) {
-      console.error('Missing code or accountId:', { code, accountId });
+    if (!code || !state) {
       return NextResponse.redirect(new URL('/accounts?error=missing_params', request.url));
     }
 
-    const account = await prisma.account.findUnique({
-      where: { id: accountId },
-    });
+    let accountId: string;
+    try {
+      const stateObj = JSON.parse(atob(state));
+      accountId = stateObj.accountId;
+      console.log('Account ID from state:', accountId);
+    } catch (e) {
+      console.error('Failed to parse state:', e);
+      return NextResponse.redirect(new URL('/accounts?error=invalid_state', request.url));
+    }
+
+    if (!accountId) {
+      return NextResponse.redirect(new URL('/accounts?error=no_account_id', request.url));
+    }
+
+    const account = await prisma.account.findUnique({ where: { id: accountId } });
 
     if (!account) {
       console.error('Account not found:', accountId);
       return NextResponse.redirect(new URL('/accounts?error=account_not_found', request.url));
     }
-
-    console.log('Account found:', { id: account.id, hasClientId: !!account.blingClientId });
 
     if (!account.blingClientId || !account.blingClientSecret) {
       console.error('Account missing credentials');
@@ -39,9 +48,10 @@ export async function GET(request: NextRequest) {
 
     const clientId = decrypt(account.blingClientId);
     const clientSecret = decrypt(account.blingClientSecret);
-    const redirectUri = `${request.nextUrl.origin}/api/auth/bling/callback`;
+    const baseUrl = new URL(request.headers.get('origin') || 'http://localhost:3000').origin;
+    const redirectUri = `${baseUrl}/api/auth/bling/callback`;
 
-    console.log('Exchanging code for tokens...');
+    console.log('Exchanging code for tokens');
     const tokens = await getInitialTokens(clientId, clientSecret, code, redirectUri);
 
     await prisma.account.update({
