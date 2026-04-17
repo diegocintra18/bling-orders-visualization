@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getInitialTokens } from '@/lib/bling';
-import { encrypt } from '@/lib/crypto';
+import { decrypt } from '@/lib/crypto';
 import prisma from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
