@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const state = searchParams.get('state');
     const error = searchParams.get('error');
 
-    console.log('OAuth callback received:', { hasCode: !!code, hasState: !!state, error });
+    console.log('OAuth callback received:', { hasCode: !!code, hasState: !!state, state: state?.substring(0, 80), error });
 
     if (error) {
       return NextResponse.redirect(new URL(`/accounts?error=${error}`, request.url));
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/accounts?error=invalid_state', request.url));
     }
 
-    const accountId = parts[0];
+    const accountId = decodeURIComponent(parts[0]);
     console.log('Account ID from state:', accountId);
 
     if (!accountId) {

@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const state = btoa(accountId);
+    const state = btoa(encodeURIComponent(accountId));
     const oauthUrl = getBlingOAuthUrl('', callbackUrl, state);
 
     return NextResponse.json({ url: oauthUrl, state: accountId });
