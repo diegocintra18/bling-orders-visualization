@@ -44,6 +44,8 @@ model Order {
   transportadora  String
   valor           Float
   cliente         Json?
+  notaFiscal      Json?
+  rastreamento    Json?
   
   dataCriacao     DateTime
   dataFaturamento DateTime?
