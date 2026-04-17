@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getAuthUser } from '@/lib/authGuard';
-import { encrypt, decrypt } from '@/lib/crypto';
-import { createBlingClient } from '@/lib/bling';
+import { encrypt } from '@/lib/crypto';
 
 export async function GET(request: NextRequest) {
   try {
@@ -64,15 +63,6 @@ export async function POST(request: NextRequest) {
     const encryptedClientId = encrypt(clientId);
     const encryptedClientSecret = encrypt(clientSecret);
 
-    const client = await createBlingClient(
-      encryptedClientId,
-      encryptedClientSecret,
-      accessToken,
-      refreshToken
-    );
-
-    await client.getStores();
-
     const webhookToken = crypto.randomUUID();
 
     const account = await prisma.account.create({
@@ -80,9 +70,8 @@ export async function POST(request: NextRequest) {
         name,
         blingClientId: encryptedClientId,
         blingClientSecret: encryptedClientSecret,
-        blingAccessToken: accessToken,
-        blingRefreshToken: refreshToken,
-        blingTokenExpiry: client.getCredentials().tokenExpiry,
+        blingAccessToken: accessToken || null,
+        blingRefreshToken: refreshToken || null,
         webhookToken,
       },
     });
@@ -96,7 +85,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Create account error:', error);
     return NextResponse.json(
-      { error: 'Erro ao criar conta. Verifique as credenciais OAuth.' },
+      { error: 'Erro ao criar conta: ' + (error instanceof Error ? error.message : 'Erro desconhecido') },
       { status: 400 }
     );
   }

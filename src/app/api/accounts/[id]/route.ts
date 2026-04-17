@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getAuthUser } from '@/lib/authGuard';
 import { encrypt } from '@/lib/crypto';
-import { createBlingClient } from '@/lib/bling';
 
 export async function GET(
   request: NextRequest,
@@ -69,18 +68,8 @@ export async function PUT(
     if (clientId && clientSecret) {
       updateData.blingClientId = encrypt(clientId);
       updateData.blingClientSecret = encrypt(clientSecret);
-      
-      if (accessToken || refreshToken) {
-        const client = await createBlingClient(
-          encrypt(clientId),
-          encrypt(clientSecret),
-          accessToken,
-          refreshToken
-        );
-        updateData.blingAccessToken = accessToken;
-        updateData.blingRefreshToken = refreshToken;
-        updateData.blingTokenExpiry = client.getCredentials().tokenExpiry;
-      }
+      updateData.blingAccessToken = accessToken || null;
+      updateData.blingRefreshToken = refreshToken || null;
     }
 
     const account = await prisma.account.update({
