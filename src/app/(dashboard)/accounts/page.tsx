@@ -89,6 +89,10 @@ export default function AccountsPage() {
 
     setIsAuthorizing(true);
     try {
+      if (editingAccount?.id) {
+        await api.updateAccount(editingAccount.id, editingAccount.name, formData.clientId, formData.clientSecret);
+      }
+
       const response = await fetch('/api/auth/bling/url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -103,7 +107,7 @@ export default function AccountsPage() {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        alert('Erro ao gerar URL de autorização');
+        alert('Erro ao gerar URL de autorização: ' + (data.error || 'Erro desconhecido'));
       }
     } catch (error) {
       console.error('Error authorizing:', error);
