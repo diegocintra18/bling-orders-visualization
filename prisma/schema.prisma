@@ -3,12 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @default(cuid())
   email     String   @unique
   password  String
   name      String
@@ -18,23 +18,23 @@ model User {
 }
 
 model Account {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
-  name            String
-  blingClientId   String
+  id                String   @id @default(cuid())
+  name              String
+  blingClientId     String
   blingClientSecret String
   blingAccessToken  String?
   blingRefreshToken String?
   blingTokenExpiry  DateTime?
-  blingAccountId   String?
-  webhookToken     String?
+  blingAccountId    String?
+  webhookToken      String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   orders           Order[]
 }
 
 model Order {
-  id              String    @id @default(auto()) @map("_id") @db.ObjectId
-  accountId       String    @db.ObjectId
+  id              String    @id @default(cuid())
+  accountId       String
   account         Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
   
   numero          String
@@ -60,8 +60,8 @@ model Order {
 }
 
 model Store {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  accountId String   @db.ObjectId
+  id        String   @id @default(cuid())
+  accountId String
   name      String
   blingId   String
   createdAt DateTime @default(now())

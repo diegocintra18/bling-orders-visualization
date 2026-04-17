@@ -11,14 +11,14 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      message: 'Conexão com MongoDB estabelecida com sucesso',
+      message: 'Conexão com PostgreSQL estabelecida com sucesso',
       userCount,
       database: 'bling-orders'
     });
   } catch (error: any) {
     return NextResponse.json({
       success: false,
-      message: 'Erro ao conectar com MongoDB',
+      message: 'Erro ao conectar com PostgreSQL',
       error: error.message || 'Erro desconhecido',
       code: error.code,
       env: {
