@@ -60,19 +60,10 @@ export default function OrdersPage() {
   const handleSyncOrder = async (orderId: string) => {
     setSyncingOrderId(orderId);
     try {
-      const response = await fetch(`/api/orders/${orderId}/sync`, {
+      await api.authenticatedRequest(`/api/orders/${orderId}/sync`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
       });
-
-      if (response.ok) {
-        fetchData();
-      } else {
-        const error = await response.json();
-        alert(`Erro ao sincronizar: ${error.error}`);
-      }
+      fetchData();
     } catch (error) {
       console.error('Error syncing order:', error);
       alert('Erro ao sincronizar pedido');

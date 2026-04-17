@@ -16,6 +16,10 @@ class ApiClient {
   private accessToken: string | null = null;
   private refreshToken: string | null = null;
 
+  constructor() {
+    this.loadTokens();
+  }
+
   setTokens(access: string, refresh: string): void {
     this.accessToken = access;
     this.refreshToken = refresh;
@@ -43,6 +47,13 @@ class ApiClient {
 
   getAccessToken(): string | null {
     return this.accessToken;
+  }
+
+  async authenticatedRequest<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    return this.request<T>(endpoint, options);
   }
 
   private async request<T>(
