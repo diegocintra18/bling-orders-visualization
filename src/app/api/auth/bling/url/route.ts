@@ -9,19 +9,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
-    const { clientId, accountId, callbackUrl } = await request.json();
+    const { accountId, callbackUrl } = await request.json();
 
-    if (!clientId || !accountId || !callbackUrl) {
+    if (!accountId || !callbackUrl) {
       return NextResponse.json(
-        { error: 'Client ID, Account ID e Callback URL são obrigatórios' },
+        { error: 'Account ID e Callback URL são obrigatórios' },
         { status: 400 }
       );
     }
 
-    const state = btoa(`${accountId}|${clientId}|${callbackUrl}`);
-    const oauthUrl = getBlingOAuthUrl(clientId, callbackUrl, state);
+    const state = btoa(accountId);
+    const oauthUrl = getBlingOAuthUrl('', callbackUrl, state);
 
-    return NextResponse.json({ url: oauthUrl });
+    return NextResponse.json({ url: oauthUrl, state: accountId });
   } catch (error) {
     console.error('OAuth URL error:', error);
     return NextResponse.json(
