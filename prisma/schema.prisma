@@ -27,6 +27,7 @@ model Account {
   blingTokenExpiry  DateTime?
   blingAccountId    String?
   webhookToken      String?
+  oauthState        String?   @unique
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   orders           Order[]
