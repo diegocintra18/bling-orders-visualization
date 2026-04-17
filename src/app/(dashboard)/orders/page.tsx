@@ -6,8 +6,17 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Input, Select } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, RefreshCw as SyncIcon, Settings } from 'lucide-react';
 import type { Order, OrderFilters, BlingAccount } from '@/types';
+
+const statusLabels: Record<string, string> = {
+  em_aberto: 'Em Aberto',
+  em_separacao: 'Em Separação',
+  atendido: 'Atendido',
+  verificado: 'Verificado',
+  concluido: 'Concluído',
+  cancelado: 'Cancelado',
+};
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -15,6 +24,7 @@ export default function OrdersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState<OrderFilters>({});
   const [search, setSearch] = useState('');
+  const [syncingOrderId, setSyncingOrderId] = useState<string | null>(null);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -47,16 +57,61 @@ export default function OrdersPage() {
     fetchData();
   };
 
+  const handleSyncOrder = async (orderId: string) => {
+    setSyncingOrderId(orderId);
+    try {
+      const response = await fetch(`/api/orders/${orderId}/sync`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        fetchData();
+      } else {
+        const error = await response.json();
+        alert(`Erro ao sincronizar: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error syncing order:', error);
+      alert('Erro ao sincronizar pedido');
+    } finally {
+      setSyncingOrderId(null);
+    }
+  };
+
   const getStatusVariant = (status: string) => {
     switch (status) {
-      case 'faturado':
+      case 'em_aberto':
         return 'pending';
+      case 'atendido':
+        return 'verified';
       case 'verificado':
         return 'verified';
       case 'concluido':
         return 'completed';
+      case 'cancelado':
+        return 'error';
       default:
         return 'default';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'em_aberto':
+        return <Settings className="w-3 h-3 mr-1" />;
+      case 'atendido':
+        return <Settings className="w-3 h-3 mr-1" />;
+      case 'verificado':
+        return <RefreshCw className="w-3 h-3 mr-1" />;
+      case 'concluido':
+        return <RefreshCw className="w-3 h-3 mr-1" />;
+      case 'cancelado':
+        return <Settings className="w-3 h-3 mr-1" />;
+      default:
+        return null;
     }
   };
 
@@ -84,9 +139,11 @@ export default function OrdersPage() {
 
   const statusOptions = [
     { value: '', label: 'Todos os status' },
-    { value: 'faturado', label: 'Faturado' },
+    { value: 'em_aberto', label: 'Em Aberto' },
+    { value: 'atendido', label: 'Atendido' },
     { value: 'verificado', label: 'Verificado' },
     { value: 'concluido', label: 'Concluído' },
+    { value: 'cancelado', label: 'Cancelado' },
   ];
 
   return (
@@ -161,18 +218,21 @@ export default function OrdersPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Atraso
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  Ações
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center">
+                  <td colSpan={6} className="px-6 py-8 text-center">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
                   </td>
                 </tr>
               ) : orders.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
+                  <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
                     Nenhum pedido encontrado
                   </td>
                 </tr>
@@ -187,7 +247,10 @@ export default function OrdersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <Badge variant={getStatusVariant(order.status) as any}>
-                        {order.status?.charAt(0).toUpperCase() + order.status?.slice(1) || '-'}
+                        <span className="flex items-center">
+                          {getStatusIcon(order.status)}
+                          {statusLabels[order.status] || order.status}
+                        </span>
                       </Badge>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
@@ -197,7 +260,7 @@ export default function OrdersPage() {
                       {order.transportadora || '-'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {order.status === 'faturado' ? (
+                      {order.status === 'atendido' || order.status === 'em_aberto' ? (
                         <span
                           className={`text-sm font-medium ${
                             isDelayed(order.dataFaturamento)
@@ -210,6 +273,17 @@ export default function OrdersPage() {
                       ) : (
                         <span className="text-slate-500">-</span>
                       )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSyncOrder(order.id)}
+                        disabled={syncingOrderId === order.id}
+                        title="Sincronizar com Bling"
+                      >
+                        <SyncIcon className={`w-4 h-4 ${syncingOrderId === order.id ? 'animate-spin' : ''}`} />
+                      </Button>
                     </td>
                   </tr>
                 ))

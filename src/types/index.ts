@@ -1,4 +1,4 @@
-export type OrderStatus = 'faturado' | 'verificado' | 'concluido';
+export type OrderStatus = 'em_aberto' | 'em_separacao' | 'atendido' | 'verificado' | 'concluido' | 'cancelado';
 
 export interface BlingAccount {
   id: string;
