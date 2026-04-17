@@ -20,25 +20,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/accounts?error=missing_params', request.url));
     }
 
-    let accountId: string;
-    try {
-      const stateObj = JSON.parse(atob(state));
-      accountId = stateObj.accountId;
-      console.log('Account ID from state:', accountId);
-    } catch (e) {
-      console.error('Failed to parse state:', e);
-      return NextResponse.redirect(new URL('/accounts?error=invalid_state', request.url));
-    }
-
-    if (!accountId) {
-      return NextResponse.redirect(new URL('/accounts?error=no_account_id', request.url));
-    }
-
-    const account = await prisma.account.findUnique({ where: { id: accountId } });
+    const account = await prisma.account.findUnique({
+      where: { oauthState: state }
+    });
 
     if (!account) {
-      console.error('Account not found:', accountId);
-      return NextResponse.redirect(new URL('/accounts?error=account_not_found', request.url));
+      console.error('No account found for state:', state);
+      return NextResponse.redirect(new URL('/accounts?error=invalid_state', request.url));
     }
 
     if (!account.blingClientId || !account.blingClientSecret) {
@@ -55,11 +43,12 @@ export async function GET(request: NextRequest) {
     const tokens = await getInitialTokens(clientId, clientSecret, code, redirectUri);
 
     await prisma.account.update({
-      where: { id: accountId },
+      where: { id: account.id },
       data: {
         blingAccessToken: tokens.access_token,
         blingRefreshToken: tokens.refresh_token,
         blingTokenExpiry: new Date(Date.now() + tokens.expires_in * 1000),
+        oauthState: null
       },
     });
 
