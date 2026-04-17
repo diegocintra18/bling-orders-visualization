@@ -52,8 +52,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/accounts?error=account_not_found', request.url));
     }
 
+    console.log('Account found:', { id: account.id, hasClientId: !!account.blingClientId });
+
     if (!account.blingClientId || !account.blingClientSecret) {
-      console.error('Account missing credentials:', accountId);
+      console.error('Account missing credentials');
       return NextResponse.redirect(new URL('/accounts?error=no_credentials_saved', request.url));
     }
 
