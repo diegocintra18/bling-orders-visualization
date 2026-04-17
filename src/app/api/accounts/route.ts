@@ -51,7 +51,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
-    const { name, clientId, clientSecret, accessToken, refreshToken } = await request.json();
+    const body = await request.json();
+    const { name, clientId, clientSecret } = body;
+
+    console.log('Creating account:', { name, hasClientId: !!clientId, hasClientSecret: !!clientSecret });
 
     if (!name || !clientId || !clientSecret) {
       return NextResponse.json(
@@ -62,7 +65,6 @@ export async function POST(request: NextRequest) {
 
     const encryptedClientId = encrypt(clientId);
     const encryptedClientSecret = encrypt(clientSecret);
-
     const webhookToken = crypto.randomUUID();
 
     const account = await prisma.account.create({
@@ -70,23 +72,23 @@ export async function POST(request: NextRequest) {
         name,
         blingClientId: encryptedClientId,
         blingClientSecret: encryptedClientSecret,
-        blingAccessToken: accessToken || null,
-        blingRefreshToken: refreshToken || null,
         webhookToken,
       },
     });
+
+    console.log('Account created:', account.id);
 
     return NextResponse.json({
       id: account.id,
       name: account.name,
       webhookToken: account.webhookToken,
-      message: 'Conta criada com sucesso. Configure o webhook no Bling.',
+      message: 'Conta criada com sucesso.',
     });
   } catch (error) {
     console.error('Create account error:', error);
-    return NextResponse.json(
-      { error: 'Erro ao criar conta: ' + (error instanceof Error ? error.message : 'Erro desconhecido') },
-      { status: 400 }
-    );
+    return NextResponse.json({
+      error: 'Erro ao criar conta: ' + (error as Error).message,
+      details: error
+    }, { status: 400 });
   }
 }
