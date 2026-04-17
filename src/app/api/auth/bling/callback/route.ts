@@ -7,40 +7,18 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const code = searchParams.get('code');
-    const state = searchParams.get('state');
+    const accountId = searchParams.get('accountId');
     const error = searchParams.get('error');
 
-    console.log('OAuth callback received:', { hasCode: !!code, hasState: !!state, state: state?.substring(0, 80), error });
+    console.log('OAuth callback received:', { hasCode: !!code, accountId, error });
 
     if (error) {
       return NextResponse.redirect(new URL(`/accounts?error=${error}`, request.url));
     }
 
-    if (!code || !state) {
-      console.error('Missing code or state:', { code, state });
+    if (!code || !accountId) {
+      console.error('Missing code or accountId:', { code, accountId });
       return NextResponse.redirect(new URL('/accounts?error=missing_params', request.url));
-    }
-
-    let decodedState: string;
-    try {
-      decodedState = atob(state);
-    } catch (e) {
-      console.error('Failed to decode state:', e);
-      return NextResponse.redirect(new URL('/accounts?error=invalid_state', request.url));
-    }
-
-    const parts = decodedState.split('|');
-    console.log('State parts count:', parts.length);
-
-    if (parts.length < 1) {
-      return NextResponse.redirect(new URL('/accounts?error=invalid_state', request.url));
-    }
-
-    const accountId = decodeURIComponent(parts[0]);
-    console.log('Account ID from state:', accountId);
-
-    if (!accountId) {
-      return NextResponse.redirect(new URL('/accounts?error=no_account_id', request.url));
     }
 
     const account = await prisma.account.findUnique({

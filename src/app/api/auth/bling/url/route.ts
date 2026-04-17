@@ -18,10 +18,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const state = btoa(encodeURIComponent(accountId));
-    const oauthUrl = getBlingOAuthUrl('', callbackUrl, state);
+    const callbackWithAccount = `${callbackUrl}?accountId=${accountId}`;
+    const state = 'bling-oauth';
+    const oauthUrl = getBlingOAuthUrl('', callbackWithAccount, state);
 
-    return NextResponse.json({ url: oauthUrl, state: accountId });
+    return NextResponse.json({ url: oauthUrl });
   } catch (error) {
     console.error('OAuth URL error:', error);
     return NextResponse.json(
